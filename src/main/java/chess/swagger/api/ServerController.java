@@ -82,7 +82,6 @@ public class ServerController {
 
         String res = "";
         JSONObject msg = new JSONObject();
-        msg.put("source", "https://127.0.0.1:8080");
         msg.put("msg", command.command);
 
         HttpClient client = HttpClient.newBuilder().build();
@@ -111,7 +110,6 @@ public class ServerController {
 
         String res = "";
         JSONObject msg = new JSONObject();
-        msg.put("source", "https://127.0.0.1:8080");
         msg.put("msg", command.command);
 
         HttpClient client = HttpClient.newBuilder().build();

@@ -6,8 +6,6 @@ public class CommandModel {
 
     public String command;
 
-    public String source;
-
     @Override
     public String toString() {
         return "command='" + command + '\'' +
