@@ -14,7 +14,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import java.util.Date;
@@ -41,7 +40,11 @@ public class UserController {
     @ApiOperation(value="Add new user")
     @ApiResponses(value = {
             @ApiResponse(code=200, message="OK"),
-            @ApiResponse(code=401, message="Unauthorized") })
+            @ApiResponse(code=400, message="Bad Request"),
+            @ApiResponse(code=401, message="Unauthorized"),
+            @ApiResponse(code=405, message="Method Not Allowed"),
+            @ApiResponse(code=415, message="Unsupported Media Type"),
+            @ApiResponse(code=503, message="Service Unavailable") })
     public @ResponseBody String addNewUser (
             @RequestBody LoginModel user) {
 
@@ -56,7 +59,10 @@ public class UserController {
             produces=MediaType.APPLICATION_JSON_VALUE)
     @ApiOperation(value="Get access")
     @ApiResponses(value = {
-            @ApiResponse(code=200, message="OK") })
+            @ApiResponse(code=200, message="OK"),
+            @ApiResponse(code=400, message="Bad Request"),
+            @ApiResponse(code=405, message="Method Not Allowed"),
+            @ApiResponse(code=415, message="Unsupported Media Type") })
     public @ResponseBody
     AccessModel getAccess(@RequestBody LoginModel user) {
 
@@ -70,6 +76,7 @@ public class UserController {
                 .setSubject(user.getLogin())
                 .claim("roles", "user")
                 .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 3600*1000))
                 .signWith(SignatureAlgorithm.HS256, jwtSecretKey)
                 .compact();
 
@@ -103,7 +110,10 @@ public class UserController {
     @ApiOperation(value="Leave")
     @ApiResponses(value = {
             @ApiResponse(code=200, message="OK"),
-            @ApiResponse(code=401, message="Unauthorized") })
+            @ApiResponse(code=400, message="Bad Request"),
+            @ApiResponse(code=401, message="Unauthorized"),
+            @ApiResponse(code=405, message="Method Not Allowed"),
+            @ApiResponse(code=503, message="Service Unavailable") })
     public String leave() {
         return serverStatus.userLoggedOut();
     }

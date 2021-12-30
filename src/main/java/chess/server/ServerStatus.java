@@ -2,6 +2,7 @@ package chess.server;
 
 import chess.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 /**
@@ -20,13 +21,19 @@ public class ServerStatus {
      */
     private long lastUserActivity = 0;
 
+    private int HTTPStatus = HttpStatus.OK.value();
+
     @Autowired
-    private Constants constantsProperties;
+    private final Constants constantsProperties;
+
+    public ServerStatus(Constants constantsProperties) {
+        this.constantsProperties = constantsProperties;
+    }
 
     /**
      * Checks if server is available for user with token {@code token} i.e. {@link #currentUserToken} is null, or
      * {@link #currentUserToken} equals {#code token} and {@link #lastUserActivity} was more then
-     * {@link Constants#MAX_USER_INACTIVE} ms ago.
+     * {@link Constants#getMAX_USER_INACTIVE()} ms ago.
      *
      * @param token token of user for which you want to check server availability
      * @return whether server is available for user, or not
@@ -46,6 +53,14 @@ public class ServerStatus {
         }
 
         return false;
+    }
+
+    public void updateServerStatus(int status){
+        this.HTTPStatus = status;
+    }
+
+    public int getServerStatus(){
+        return HTTPStatus;
     }
 
     /**

@@ -1,8 +1,6 @@
 package chess.swagger.model;
 
 import java.util.ArrayList;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class ServerListModel {
 
@@ -16,8 +14,11 @@ public class ServerListModel {
         this.serverList.add(serverModel);
     }
 
-    public void deleteServer(String serverName){
+    public boolean deleteServer(String serverName){
+        int count = serverList.size();
         this.serverList.removeIf(server -> server.getName().equals(serverName));
+
+        return count != serverList.size();
     }
 
     public String getUrlByName(String name){
@@ -28,6 +29,6 @@ public class ServerListModel {
             }
         }
 
-        return " ";
+        return null;
     }
 }

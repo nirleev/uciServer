@@ -1,6 +1,5 @@
 package chess.ws;
 
-
 import chess.engine.EngineHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.socket.CloseStatus;
@@ -8,9 +7,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import javax.websocket.ClientEndpoint;
-import javax.websocket.OnOpen;
-import javax.websocket.Session;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Observable;
