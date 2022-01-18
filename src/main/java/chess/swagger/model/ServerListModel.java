@@ -31,4 +31,24 @@ public class ServerListModel {
 
         return null;
     }
+
+    public boolean urlExist(String url){
+        for(ServerModel server: serverList){
+            if(server.getUrl().equals(url)){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public boolean nameExist(String name){
+        for(ServerModel server: serverList){
+            if(server.getName().equals(name)){
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

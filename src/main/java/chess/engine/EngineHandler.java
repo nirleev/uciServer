@@ -15,9 +15,6 @@ public class EngineHandler {
 
     public final EngineObservable observable = new EngineObservable();
 
-    public EngineHandler() {
-    }
-
     /**
      * Starts new engine thread. If there is any running engine then it will be stopped.
      * @param engine engine to start.

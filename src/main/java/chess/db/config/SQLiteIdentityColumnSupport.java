@@ -1,4 +1,4 @@
-package chess.db;
+package chess.db.config;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;

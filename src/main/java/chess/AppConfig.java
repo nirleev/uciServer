@@ -9,6 +9,8 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Arrays;
 
@@ -33,7 +35,6 @@ public class AppConfig {
     public EngineHandler engineHandler() {
         return new EngineHandler();
     }
-
 
     @Bean
     public FilterRegistrationBean exceptionFilter() {

@@ -132,7 +132,7 @@ public class WebSocketHandler extends TextWebSocketHandler implements Observer {
 
     private class CloseEngineDelayedThread extends Thread {
 
-        static final long DELAY = 1 * 60 * 1000;
+        static final long DELAY = 5 * 60 * 1000;
 
         @Override
         public void run() {
@@ -142,7 +142,7 @@ public class WebSocketHandler extends TextWebSocketHandler implements Observer {
                 return;
             }
 
-            engineHandler.stopEngine();
+            //engineHandler.stopEngine();
         }
     }
 }

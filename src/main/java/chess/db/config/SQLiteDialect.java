@@ -1,4 +1,4 @@
-package chess.db;
+package chess.db.config;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionTemplate;

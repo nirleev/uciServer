@@ -1,6 +1,7 @@
 package chess.swagger.api;
 
 import chess.Constants;
+import chess.db.AccountDAO;
 import chess.db.model.User;
 import chess.db.model.UserRepository;
 import chess.server.ServerStatus;
@@ -14,8 +15,11 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.Date;
 
 /**
@@ -28,13 +32,13 @@ import java.util.Date;
 public class UserController {
 
     @Autowired
+    private Constants constantsProperties;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private ServerStatus serverStatus;
-
-    @Autowired
-    private Constants constantsProperties;
 
     @PostMapping(path="/add", consumes=MediaType.APPLICATION_JSON_VALUE)
     @ApiOperation(value="Add new user")
@@ -48,11 +52,7 @@ public class UserController {
     public @ResponseBody String addNewUser (
             @RequestBody LoginModel user) {
 
-        User n = new User();
-        n.setLogin(user.getLogin());
-        n.setPassword(DigestUtils.sha256Hex(user.getPassword()));
-        userRepository.save(n);
-        return "Saved";
+        return new AccountDAO(userRepository).registerNewUserAccount(user);
     }
 
     @PostMapping(path = "/login", consumes="application/json",
@@ -66,7 +66,7 @@ public class UserController {
     public @ResponseBody
     AccessModel getAccess(@RequestBody LoginModel user) {
 
-        if (!loginUser(user.getLogin(), user.getPassword())) {
+        if (! new AccountDAO(userRepository).validateCredentials(user.getLogin(), user.getPassword())) {
             return new AccessModel(false, null);
         }
 
@@ -81,26 +81,6 @@ public class UserController {
                 .compact();
 
         return new AccessModel(true, jwt);
-    }
-
-    /**
-     * Looks for a user with given credentials
-     * @param login login of a user
-     * @param password password of a user
-     * @return whether login was successful
-     */
-    public boolean loginUser (String login, String password) {
-
-        boolean f = false;
-
-        for (User user : userRepository.findAll()) {
-
-            if(user.getLogin().equals(login) && user.getPassword().equals(DigestUtils.sha256Hex(password))){
-                f = true;
-            }
-        }
-
-        return f;
     }
 
     /**

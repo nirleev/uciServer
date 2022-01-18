@@ -64,6 +64,7 @@ public class ServerController {
                 responses.add(server.getName() + " says " + response.body());
             } catch (URISyntaxException | IOException | InterruptedException e) {
                 responses.add(server.getName() + " unavailable");
+                //responses.add(e.getMessage());
             }
         }
 
@@ -263,9 +264,16 @@ public class ServerController {
             @ApiResponse(code=503, message="Service Unavailable") })
     public @ResponseBody String add(@RequestBody ServerModel server) {
 
-        serverListModel.addServer(server);
+        if(! serverListModel.urlExist(server.getUrl())){
+            if(! serverListModel.nameExist(server.getName())) {
+                serverListModel.addServer(server);
+                return "Saved";
+            }
 
-        return "Saved";
+            return "Server with given name already exists - request ignored";
+        }
+
+        return "Given URL has already been added - request ignored";
     }
 
     @PostMapping(path="/delete")
