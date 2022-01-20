@@ -64,7 +64,6 @@ public class ServerController {
                 responses.add(server.getName() + " says " + response.body());
             } catch (URISyntaxException | IOException | InterruptedException e) {
                 responses.add(server.getName() + " unavailable");
-                //responses.add(e.getMessage());
             }
         }
 
@@ -213,7 +212,7 @@ public class ServerController {
         return res;
     }
 
-    @PostMapping(path="/stop-engine", consumes=MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path="/stop-engine")
     @ApiOperation(value="Stop engine on Chess Server")
     @ApiResponses(value = {
             @ApiResponse(code=200, message="OK"),
