@@ -88,8 +88,7 @@ public class EngineController {
 
         for (Engine e : engineRepository.findAll()) {
             if(e.getName().equals(engine.name)){
-                engineHandler.startEngine(e);
-                boolean info = engineHandler.waitForEngine();
+                boolean info = engineHandler.startEngine(e);
 
                 if(info){
                     return new InfoModel(true, String.format("Engine %s started", e.getName()));
