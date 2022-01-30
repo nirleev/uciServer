@@ -78,7 +78,7 @@ public class UserController {
                 .setSubject(user.getLogin())
                 .claim("roles", "user")
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 3600*1000))
+                //.setExpiration(new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24)))
                 .signWith(SignatureAlgorithm.HS256, jwtSecretKey)
                 .compact();
 
