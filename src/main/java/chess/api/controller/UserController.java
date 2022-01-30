@@ -1,24 +1,21 @@
-package chess.swagger.api;
+package chess.api.controller;
 
 import chess.Constants;
 import chess.db.AccountDAO;
-import chess.db.model.User;
 import chess.db.model.UserRepository;
+import chess.server.ServerLogger;
 import chess.server.ServerStatus;
-import chess.swagger.model.AccessModel;
-import chess.swagger.model.LoginModel;
+import chess.api.model.AccessModel;
+import chess.api.model.LoginModel;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
 
@@ -40,6 +37,9 @@ public class UserController {
     @Autowired
     private ServerStatus serverStatus;
 
+    private final ServerLogger logger =
+            new ServerLogger(this.getClass().getName(), true);
+
     @PostMapping(path="/add", consumes=MediaType.APPLICATION_JSON_VALUE)
     @ApiOperation(value="Add new user")
     @ApiResponses(value = {
@@ -52,6 +52,7 @@ public class UserController {
     public @ResponseBody String addNewUser (
             @RequestBody LoginModel user) {
 
+        logger.log("info", "Registered new user " + user.getLogin().substring(1) + "***");
         return new AccountDAO(userRepository).registerNewUserAccount(user);
     }
 
@@ -67,6 +68,7 @@ public class UserController {
     AccessModel getAccess(@RequestBody LoginModel user) {
 
         if (! new AccountDAO(userRepository).validateCredentials(user.getLogin(), user.getPassword())) {
+            logger.log("info", "Failed login attempt");
             return new AccessModel(false, null);
         }
 
@@ -80,6 +82,7 @@ public class UserController {
                 .signWith(SignatureAlgorithm.HS256, jwtSecretKey)
                 .compact();
 
+        logger.log("info", "Successful login attempt");
         return new AccessModel(true, jwt);
     }
 
@@ -95,6 +98,7 @@ public class UserController {
             @ApiResponse(code=405, message="Method Not Allowed"),
             @ApiResponse(code=503, message="Service Unavailable") })
     public String leave() {
+        logger.log("info", "User logout");
         return serverStatus.userLoggedOut();
     }
 }

@@ -1,4 +1,4 @@
-package chess.swagger.model;
+package chess.api.model;
 
 public class StartEngineOnServerModel {
 

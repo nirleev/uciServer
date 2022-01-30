@@ -1,4 +1,4 @@
-package chess.swagger.model;
+package chess.api.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;

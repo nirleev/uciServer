@@ -1,4 +1,4 @@
-package chess.swagger;
+package chess.api;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,7 +24,7 @@ public class SwaggerConfig {
                 .securitySchemes(Arrays.asList(apiKey()))
                 .useDefaultResponseMessages(false)
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("chess.swagger.api"))
+                .apis(RequestHandlerSelectors.basePackage("chess.api.controller"))
                 .paths(PathSelectors.any())
                 .build();
     }

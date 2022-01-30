@@ -1,9 +1,10 @@
-package chess.swagger.api;
+package chess.api.controller;
 
 import chess.db.model.Engine;
 import chess.db.model.EngineRepository;
+import chess.server.ServerLogger;
 import chess.server.ServerStatus;
-import chess.swagger.model.*;
+import chess.api.model.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -32,13 +33,15 @@ import java.util.ArrayList;
 @Api(value = "Server", tags = { "Server" })
 public class ServerController {
 
-    private final ServerListModel serverListModel = new ServerListModel();
-
     @Autowired
     private ServerStatus serverStatus;
 
     @Autowired
     private EngineRepository engineRepository;
+
+    private final ServerListModel serverListModel = new ServerListModel();
+    private final ServerLogger logger =
+            new ServerLogger(this.getClass().getName(), true);
 
     @GetMapping(path="/heartbeat")
     @ApiOperation(value="Check connections with Chess Servers")
@@ -51,6 +54,7 @@ public class ServerController {
     public @ResponseBody String connect() {
 
         ArrayList<String> responses = new ArrayList<>();
+        logger.log("info", "Check connections request");
 
         for(ServerModel server: serverListModel.serverList){
             HttpClient client = HttpClient.newBuilder().build();
@@ -74,90 +78,6 @@ public class ServerController {
         return res.toString();
     }
 
-    @PostMapping(path="/command", consumes=MediaType.APPLICATION_JSON_VALUE)
-    @ApiOperation(value="Send command to Chess Server")
-    @ApiResponses(value = {
-            @ApiResponse(code=200, message="OK"),
-            @ApiResponse(code=400, message="Bad Request"),
-            @ApiResponse(code=401, message="Unauthorized"),
-            @ApiResponse(code=404, message="Not Found"),
-            @ApiResponse(code=405, message="Method Not Allowed"),
-            @ApiResponse(code=415, message="Unsupported Media Type"),
-            @ApiResponse(code=503, message="Service Unavailable")})
-    public @ResponseBody String command(@RequestBody CommandModel command) {
-
-        String res = "";
-        JSONObject msg = new JSONObject();
-        msg.put("msg", command.command);
-
-        HttpClient client = HttpClient.newBuilder().build();
-        try {
-            String url = serverListModel.getUrlByName(command.serverName);
-            if(url == null){
-                serverStatus.updateServerStatus(HttpStatus.NOT_FOUND.value());
-                throw new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Not Found");
-            } else {
-                HttpRequest request = HttpRequest.newBuilder().uri(
-                                new URI(url+"/receiver/command")).
-                        POST(HttpRequest.BodyPublishers.ofString(msg.toString())).
-                        header("Content-Type", "application/json").
-                        header("Authorization", "Bearer " + serverStatus.getCurrentUserToken()).build();
-
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                res = response.body();
-            }
-        } catch (URISyntaxException | IOException | InterruptedException e) {
-            serverStatus.updateServerStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable");
-        }
-
-        return res;
-    }
-
-    @PostMapping(path="/command-engine", consumes=MediaType.APPLICATION_JSON_VALUE)
-    @ApiOperation(value="Send command to Engine on Chess Server")
-    @ApiResponses(value = {
-            @ApiResponse(code=200, message="OK"),
-            @ApiResponse(code=400, message="Bad Request"),
-            @ApiResponse(code=401, message="Unauthorized"),
-            @ApiResponse(code=404, message="Not Found"),
-            @ApiResponse(code=405, message="Method Not Allowed"),
-            @ApiResponse(code=415, message="Unsupported Media Type"),
-            @ApiResponse(code=503, message="Service Unavailable") })
-    public @ResponseBody String send(@RequestBody CommandModel command) {
-
-        String res = "";
-        JSONObject msg = new JSONObject();
-        msg.put("msg", command.command);
-
-        HttpClient client = HttpClient.newBuilder().build();
-        try {
-            String url = serverListModel.getUrlByName(command.serverName);
-            if(url == null){
-                serverStatus.updateServerStatus(HttpStatus.NOT_FOUND.value());
-                throw new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Not Found");
-            } else {
-                HttpRequest request = HttpRequest.newBuilder().uri(
-                                new URI(serverListModel.getUrlByName(command.serverName) + "/engine/send")).
-                        POST(HttpRequest.BodyPublishers.ofString(msg.toString())).
-                        header("Content-Type", "application/json").
-                        header("Authorization", "Bearer " + serverStatus.getCurrentUserToken()).build();
-
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                res = response.body();
-            }
-        } catch (URISyntaxException | IOException | InterruptedException e) {
-            serverStatus.updateServerStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable");
-        }
-
-        return res;
-    }
-
     @PostMapping(path="/start-engine", consumes=MediaType.APPLICATION_JSON_VALUE)
     @ApiOperation(value="Start engine on Chess Server")
     @ApiResponses(value = {
@@ -172,16 +92,19 @@ public class ServerController {
 
         String res = "";
         JSONObject engine = new JSONObject();
+        logger.log("info", "Start engine request");
 
         for (Engine e : engineRepository.findAll()) {
             if(e.getName().equals(startEngineOnServerModel.engineName)){
                 engine.put("name", e.getName());
                 engine.put("path", e.getPath());
                 engine.put("description", e.getDescription());
+                break;
             }
         }
 
         if(! engine.has("name")){
+            logger.log("error", "Requested engine not found");
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Engine Not Found");
         }
 
@@ -190,6 +113,7 @@ public class ServerController {
             String url = serverListModel.getUrlByName(startEngineOnServerModel.serverName);
             if(url == null){
                 serverStatus.updateServerStatus(HttpStatus.NOT_FOUND.value());
+                logger.log("error", "Requested server " + startEngineOnServerModel.serverName + " not found");
                 throw new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Not Found");
             } else {
@@ -202,6 +126,7 @@ public class ServerController {
 
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 res = response.body();
+                logger.log("info", "Server  " + startEngineOnServerModel.serverName + " response: " + res);
             }
         } catch (URISyntaxException | IOException | InterruptedException e) {
             serverStatus.updateServerStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
@@ -225,12 +150,14 @@ public class ServerController {
     public @ResponseBody String stopEngine(@RequestBody String serverName) {
 
         String res = "";
+        logger.log("info", "Stop engine request");
 
         HttpClient client = HttpClient.newBuilder().build();
         try {
             String url = serverListModel.getUrlByName(serverName);
             if(url == null){
                 serverStatus.updateServerStatus(HttpStatus.NOT_FOUND.value());
+                logger.log("error", "Requested server " + serverName + " not found");
                 throw new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Not Found");
             } else {
@@ -242,6 +169,7 @@ public class ServerController {
 
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 res = response.body();
+                logger.log("info", "Server  " + serverName + " response: " + res);
             }
         } catch (URISyntaxException | IOException | InterruptedException e) {
             serverStatus.updateServerStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
@@ -263,16 +191,22 @@ public class ServerController {
             @ApiResponse(code=503, message="Service Unavailable") })
     public @ResponseBody String add(@RequestBody ServerModel server) {
 
+        logger.log("info", "Add server request");
+        String info = "";
+
         if(! serverListModel.urlExist(server.getUrl())){
             if(! serverListModel.nameExist(server.getName())) {
                 serverListModel.addServer(server);
+                logger.log("info", "Saved server " + server.getName());
                 return "Saved";
             }
-
-            return "Server with given name already exists - request ignored";
+            info = "Server with name " + server.getName() + " already exists - request ignored";
+            logger.log("info", info);
+            return info;
         }
-
-        return "Given URL has already been added - request ignored";
+        info = "Given URL (" + server.getUrl() + ") has already been added - request ignored";
+        logger.log("info", info);
+        return info;
     }
 
     @PostMapping(path="/delete")
@@ -286,10 +220,12 @@ public class ServerController {
             @ApiResponse(code=503, message="Service Unavailable") })
     public @ResponseBody String delete(@RequestBody String name) {
 
+        logger.log("info", "Delete server request");
         if(serverListModel.deleteServer(name)){
             return "Deleted server " + name;
         }
 
+        logger.log("info", "Requested server (" + name + ") not found");
         serverStatus.updateServerStatus(HttpStatus.NOT_FOUND.value());
         throw new ResponseStatusException(
                 HttpStatus.NOT_FOUND, "Not Found");
@@ -305,6 +241,7 @@ public class ServerController {
             @ApiResponse(code=503, message="Service Unavailable") })
     public @ResponseBody ArrayList<ServerModel> getAll() {
 
+        logger.log("info", "Available servers request");
         return serverListModel.serverList;
     }
 

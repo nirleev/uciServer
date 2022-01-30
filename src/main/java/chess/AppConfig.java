@@ -1,6 +1,5 @@
 package chess;
 
-import chess.engine.EngineHandler;
 import chess.filter.ExceptionHandlerFilter;
 import chess.filter.JwtFilter;
 import chess.server.ServerStatus;
@@ -9,8 +8,6 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Arrays;
 
@@ -31,11 +28,10 @@ public class AppConfig {
         return new ServerStatus(constantsProperties());
     }
 
-    @Bean
-    public EngineHandler engineHandler() {
-        return new EngineHandler();
-    }
-
+    /**
+     * This method defines which routes should be filtered by {@link ExceptionHandlerFilter}
+     * @return configured FilterRegistrationBean
+     */
     @Bean
     public FilterRegistrationBean exceptionFilter() {
         FilterRegistrationBean registrationBean = new FilterRegistrationBean();

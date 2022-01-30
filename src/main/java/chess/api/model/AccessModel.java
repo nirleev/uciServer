@@ -1,4 +1,4 @@
-package chess.swagger.model;
+package chess.api.model;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,9 +1,12 @@
 package chess.filter;
 
 import chess.Constants;
+import chess.server.ServerLogger;
 import chess.server.ServerStatus;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,18 +23,18 @@ public class JwtFilter extends GenericFilterBean {
     public static final String ERROR_MISSING_OR_INVALID_HEADER = "Missing or invalid Authorization header";
     public static final String ERROR_SERVER_IS_BUSY = "Server is busy";
     public static final String ERROR_INVALID_TOKEN = "Invalid token";
-    public static final String OK = "OK";
 
     private final ServerStatus serverStatus;
 
     private final Constants constantsProperties;
 
-    private boolean debug = false;
+    private final ServerLogger logger;
 
     public JwtFilter(ServerStatus serverStatus,
                      Constants constantsProperties) {
         this.serverStatus = serverStatus;
         this.constantsProperties = constantsProperties;
+        this.logger = new ServerLogger(this.getClass().getName(), constantsProperties.getLOG());
     }
 
     /**
@@ -43,11 +46,10 @@ public class JwtFilter extends GenericFilterBean {
         final HttpServletRequest request = (HttpServletRequest) req;
         serverStatus.updateServerStatus(HttpStatus.OK.value());
 
-
         final String authHeader = request.getHeader("authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
 
-            debugLog("Filter", ERROR_MISSING_OR_INVALID_HEADER);
+            logger.log("error", ERROR_MISSING_OR_INVALID_HEADER);
             serverStatus.updateServerStatus(HttpStatus.UNAUTHORIZED.value());
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED, ERROR_MISSING_OR_INVALID_HEADER);
@@ -56,7 +58,6 @@ public class JwtFilter extends GenericFilterBean {
         final String token = authHeader.substring(7); // The part after "Bearer "
 
         if (!serverStatus.isServerAvailable(token)) {
-            debugLog("Filter", ERROR_SERVER_IS_BUSY);
             serverStatus.updateServerStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE, ERROR_SERVER_IS_BUSY);
@@ -72,26 +73,13 @@ public class JwtFilter extends GenericFilterBean {
             serverStatus.updateUser(token);
             request.setAttribute("claims", claims);
         } catch (Exception e) {
-            debugLog("Filter", ERROR_INVALID_TOKEN);
+            logger.log("error", ERROR_INVALID_TOKEN);
             serverStatus.updateServerStatus(HttpStatus.UNAUTHORIZED.value());
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED, ERROR_INVALID_TOKEN);
         }
 
         chain.doFilter(req, res);
-    }
-
-    /**
-     * @param debug if this is true, then this filter will log all exceptions.
-     */
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
-
-    private void debugLog(String tag, String msg) {
-        if (debug) {
-            System.out.printf("[ServerStatus] %s : %s%n", tag, msg);
-        }
     }
 }
 
